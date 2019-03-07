@@ -1,3 +1,8 @@
-<p>
-  table works!
-</p>
+<div class="m-4">
+  <h1 class="text-center">Első játékos következik</h1>
+  <div class="alert alert-warning" *ngIf="alert">{{ alert }}</div>
+  <button (click)="pass()">PASSZ</button>
+  <div *ngFor="let item of Fields" class="row">
+    <app-field *ngFor="let i of item" [Field]="i" (clickFieldEvent)="clickField($event)"></app-field>
+  </div>
+</div>
