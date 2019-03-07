@@ -40,6 +40,7 @@ export class TableComponent implements OnInit {
   clickField(Field: Field) {
     console.log(Field);
     console.log(this.checkRow(Field));
+    console.log(this.checkCol(Field));
   }
 
   checkHasField(): boolean {
@@ -79,9 +80,42 @@ export class TableComponent implements OnInit {
     this.setRow(Field.x, starty, endy);
     return true;
   }
+
   setRow(row: number, starty: number, endy: number): void {
     for (let j = starty; j <= endy; j++) {
       this.Fields[row][j].owner = this.currentUser;
+    }
+  }
+
+  checkCol(Field: Field): boolean {
+    let startx = 0;
+    let endx = 0;
+    for (let i = 0; i < 8 && startx === 0 && endx === 0; i++) {
+      if (
+        this.Fields[i][Field.y].owner === this.currentUser &&
+        Field.x !== i &&
+        Field.x !== i - 1 &&
+        Field.x !== i + 1
+      ) {
+        startx = Field.x > i ? i : Field.x;
+        endx = Field.x < i ? i : Field.x;
+      }
+    }
+    if (startx !== 0 && endx !== 0) {
+      for (let i = startx + 1; i < endx; i++) {
+        if (this.Fields[i][Field.y].owner === 0 || this.Fields[i][Field.y].owner === this.currentUser) {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
+    this.setCol(Field.y, startx, endx);
+    return true;
+  }
+  setCol(col: number, startx: number, endx: number): void {
+    for (let i = startx; i <= endx; i++) {
+      this.Fields[i][col].owner = this.currentUser;
     }
   }
 }
