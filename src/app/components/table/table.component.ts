@@ -8,7 +8,7 @@ import { Field } from 'src/app/models/field.model';
 })
 export class TableComponent implements OnInit {
   Fields = [];
-  currentUser = 1;
+  currentUser = 2;
   alert: string = null;
 
   constructor() {}
