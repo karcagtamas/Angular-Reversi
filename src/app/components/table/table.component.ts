@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Field } from 'src/app/models/field.model';
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 @Component({
   selector: 'app-table',
@@ -39,9 +40,13 @@ export class TableComponent implements OnInit {
 
   clickField(Field: Field) {
     console.log(Field);
-    console.log(this.checkRow(Field));
-    console.log(this.checkCol(Field));
-    console.log(this.checkMainDiagonal(Field));
+    /* console.log('Row', this.checkRow(Field));
+    console.log('Col', this.checkCol(Field));
+    console.log('MainDiag', this.checkMainDiagonal(Field)); */
+
+    /* if (this.checkRow(Field) || this.checkCol(Field) || this.checkMainDiagonal(Field)) {
+      this.currentUser = this.currentUser === 1 ? 2 : 1;
+    } */
   }
 
   checkHasField(): boolean {
@@ -55,7 +60,29 @@ export class TableComponent implements OnInit {
     return false;
   }
 
-  checkRow(Field: Field): boolean {
+  checkRow(Field: Field) {
+    let validLeft = true;
+    let ys = [];
+    if (Field.y > 1) {
+      for (let j = Field.y - 1; j >= 0 && validLeft; j--) {
+        switch (this.Fields[Field.x][j]) {
+          case 0:
+            validLeft = false;
+            break;
+          case this.currentUser:
+            for (let k = 0; k < ys.length; k++) {
+              this.Fields[Field.x][ys[k]].owner == this.currentUser;
+            }
+            break;
+          default:
+            ys.push(j);
+            break;
+        }
+      }
+    }
+  }
+
+  checkRows(Field: Field): boolean {
     let starty = 0;
     let endy = 0;
     for (let j = 0; j < 8 && starty === 0 && endy === 0; j++) {
@@ -193,9 +220,9 @@ export class TableComponent implements OnInit {
     let X = 0;
     let Y = 0;
     let length = 0;
-    if (Field.x === Field.y) {
+    if (Field.x + Field.y === 7) {
       X = 0;
-      Y = 0;
+      Y = 7;
       length = 8;
     } else if (Field.x > Field.y) {
       X = Field.x - Field.y - 1;

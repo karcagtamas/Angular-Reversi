@@ -1,5 +1,6 @@
 <div class="m-4">
-  <h1 class="text-center">Első játékos következik</h1>
+  <h1 class="text-center" *ngIf="currentUser === 1">Első játékos következik</h1>
+  <h1 class="text-center" *ngIf="currentUser === 2">Második játékos következik</h1>
   <div class="alert alert-warning" *ngIf="alert">{{ alert }}</div>
   <button (click)="pass()">PASSZ</button>
   <div *ngFor="let item of Fields" class="row">
