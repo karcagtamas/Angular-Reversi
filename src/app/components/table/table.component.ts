@@ -328,6 +328,7 @@ export class TableComponent implements OnInit {
 
   // A végén ne álljanak be az eredeti érékek a többi check miatt
 
+  // tslint:disable-next-line: no-shadowed-variable
   checkMainDiagonal(Field: Field, character: boolean): boolean {
     let validRigthBottom;
     let stop = true;
