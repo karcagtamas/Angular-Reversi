@@ -1,12 +1,15 @@
-<div class="m-4">
-  <h1 class="text-center" *ngIf="currentUser === 1">Első játékos következik (Fekete) Pontok: {{ first }}</h1>
-  <h1 class="text-center" *ngIf="currentUser === 2">Második játékos következik (Fehér) {{ second }}</h1>
+<div class="m-4" class="text-center">
+  <h1 *ngIf="currentUser === 1">Első játékos következik (Fekete) Pontok: {{ first }}</h1>
+  <h1 *ngIf="currentUser === 2">Második játékos következik (Fehér) {{ second }}</h1>
   <h2 *ngIf="winner === 1">Győztes: Első játékos Pont: {{ first }}</h2>
   <h2 *ngIf="winner === 2">Győztes: Második játékos Pont: {{ second }}</h2>
   <h2 *ngIf="winner === 3">Döntetlen! Pont: {{ second }}</h2>
   <div class="alert alert-warning" *ngIf="alert">{{ alert }}</div>
-  <button (click)="pass()">PASSZ</button>
-  <div *ngFor="let item of Fields" class="row">
-    <app-field *ngFor="let i of item" [Field]="i" (clickFieldEvent)="clickField($event)"></app-field>
+  <button class="btn btn-primary" (click)="pass()">PASSZ</button>
+  <button class="btn btn-primary" (click)="restart()">RESTART</button>
+  <div id="field">
+    <div *ngFor="let item of Fields" class="row">
+      <app-field *ngFor="let i of item" [Field]="i" (clickFieldEvent)="clickField($event)"></app-field>
+    </div>
   </div>
 </div>

@@ -9,7 +9,7 @@ import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 })
 export class TableComponent implements OnInit {
   Fields = [];
-  currentUser = 2;
+  currentUser = 1;
   alert: string = null;
   first = 2;
   second = 2;
@@ -22,7 +22,17 @@ export class TableComponent implements OnInit {
     this.setToStart();
   }
 
+  restart() {
+    this.setToStart();
+  }
+
   setToStart() {
+    this.Fields = [];
+    this.currentUser = 1;
+    this.first = 2;
+    this.second = 2;
+    this.winner = 0;
+    this.game = true;
     for (let i = 0; i < 8; i++) {
       const fields: Field[] = [];
       for (let j = 0; j < 8; j++) {
@@ -160,15 +170,16 @@ export class TableComponent implements OnInit {
     if (Field.y > 1) {
       validLeft = true;
       for (let j = Field.y - 1; j >= 0 && validLeft && stop; j--) {
+        if (character) {
+          console.log('Left', this.Fields[Field.x][j]);
+        }
         switch (this.Fields[Field.x][j].owner) {
           case 0:
             validLeft = false;
             break;
           case this.currentUser:
-            console.log(ys);
             if (ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < ys.length; k++) {
                   this.Fields[Field.x][ys[k]].owner = this.currentUser;
                 }
@@ -179,9 +190,10 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            ys.push(j);
             if (j === 0) {
               validLeft = false;
+            } else {
+              ys.push(j);
             }
             break;
         }
@@ -193,6 +205,9 @@ export class TableComponent implements OnInit {
     if (Field.y < 6) {
       validRight = true;
       for (let j = Field.y + 1; j <= 7 && validRight && stop; j++) {
+        if (character) {
+          console.log('Right', this.Fields[Field.x][j]);
+        }
         switch (this.Fields[Field.x][j].owner) {
           case 0:
             validRight = false;
@@ -200,7 +215,6 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < ys.length; k++) {
                   this.Fields[Field.x][ys[k]].owner = this.currentUser;
                 }
@@ -211,13 +225,18 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            ys.push(j);
             if (j === 7) {
               validRight = false;
+            } else {
+              ys.push(j);
             }
             break;
         }
       }
+    }
+    if (character) {
+      console.log('ValidLeft', validLeft);
+      console.log('ValidRight', validRight);
     }
     if (validLeft === true || validRight === true) {
       return true;
@@ -232,12 +251,14 @@ export class TableComponent implements OnInit {
     if (Field.x > 1) {
       validTop = true;
       for (let i = Field.x - 1; i >= 0 && validTop && stop; i--) {
+        if (character) {
+          console.log('Top', this.Fields[i][Field.y]);
+        }
         switch (this.Fields[i][Field.y].owner) {
           case 0:
             validTop = false;
             break;
           case this.currentUser:
-            console.log(xs);
             if (xs.length > 0) {
               if (character) {
                 console.log('Rajz');
@@ -251,9 +272,10 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(i);
             if (i === 0) {
               validTop = false;
+            } else {
+              xs.push(i);
             }
             break;
         }
@@ -265,15 +287,16 @@ export class TableComponent implements OnInit {
     if (Field.x < 6) {
       validBottom = true;
       for (let i = Field.x + 1; i <= 7 && validBottom && stop; i++) {
+        if (character) {
+          console.log('Bottom', this.Fields[i][Field.y]);
+        }
         switch (this.Fields[i][Field.y].owner) {
           case 0:
             validBottom = false;
             break;
           case this.currentUser:
-            console.log(xs);
             if (xs.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
                   this.Fields[xs[k]][Field.y].owner = this.currentUser;
                 }
@@ -284,13 +307,18 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(i);
             if (i === 7) {
               validBottom = false;
+            } else {
+              xs.push(i);
             }
             break;
         }
       }
+    }
+    if (character) {
+      console.log('validBottom', validBottom);
+      console.log('validTop', validTop);
     }
     if (validBottom === true || validTop === true) {
       return true;
@@ -309,8 +337,10 @@ export class TableComponent implements OnInit {
     let ys = [];
     if (Field.x > 1 && Field.y > 1) {
       validRigthBottom = true;
-      while (x !== 0 && y !== 0 && stop && validRigthBottom) {
-        console.log('RightBottom', this.Fields[x][y]);
+      while (x !== -1 && y !== -1 && stop && validRigthBottom) {
+        if (character) {
+          console.log('RightBottom', this.Fields[x][y]);
+        }
         switch (this.Fields[x][y].owner) {
           case 0:
             validRigthBottom = false;
@@ -318,7 +348,6 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
                   this.Fields[xs[k]][ys[k]].owner = this.currentUser;
                 }
@@ -329,10 +358,11 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(x);
-            ys.push(y);
             if (x === 0 || y === 0) {
               validRigthBottom = false;
+            } else {
+              xs.push(x);
+              ys.push(y);
             }
             break;
         }
@@ -348,8 +378,10 @@ export class TableComponent implements OnInit {
     ys = [];
     if (Field.x < 6 && Field.y < 6) {
       validLeftTop = true;
-      while (x !== 7 && y !== 7 && stop && validLeftTop) {
-        console.log('LeftTop', this.Fields[x][y]);
+      while (x !== 8 && y !== 8 && stop && validLeftTop) {
+        if (character) {
+          console.log('LeftTop', this.Fields[x][y]);
+        }
         switch (this.Fields[x][y].owner) {
           case 0:
             validLeftTop = false;
@@ -357,7 +389,6 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
                   this.Fields[xs[k]][ys[k]].owner = this.currentUser;
                 }
@@ -368,10 +399,11 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(x);
-            ys.push(y);
             if (x === 7 || y === 7) {
               validLeftTop = false;
+            } else {
+              xs.push(x);
+              ys.push(y);
             }
             break;
         }
@@ -379,7 +411,10 @@ export class TableComponent implements OnInit {
         y++;
       }
     }
-
+    if (character) {
+      console.log('validRightBottom', validRigthBottom);
+      console.log('validLeftTop', validLeftTop);
+    }
     if (validRigthBottom === true || validLeftTop === true) {
       return true;
     }
@@ -395,8 +430,10 @@ export class TableComponent implements OnInit {
     let ys = [];
     if (Field.x < 6 && Field.y > 1) {
       validLeftBottom = true;
-      while (x !== 7 && y !== 0 && stop && validLeftBottom) {
-        console.log('LeftBottom', this.Fields[x][y]);
+      while (x !== 8 && y !== -1 && stop && validLeftBottom) {
+        if (character) {
+          console.log('LeftBottom', this.Fields[x][y]);
+        }
         switch (this.Fields[x][y].owner) {
           case 0:
             validLeftBottom = false;
@@ -404,7 +441,6 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
                   this.Fields[xs[k]][ys[k]].owner = this.currentUser;
                 }
@@ -415,10 +451,11 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(x);
-            ys.push(y);
             if (x === 7 || y === 0) {
               validLeftBottom = false;
+            } else {
+              xs.push(x);
+              ys.push(y);
             }
             break;
         }
@@ -434,8 +471,10 @@ export class TableComponent implements OnInit {
     ys = [];
     if (Field.x > 1 && Field.y < 6) {
       validRightTop = true;
-      while (x !== 7 && y !== 7 && stop && validRightTop) {
-        console.log('RightTop', this.Fields[x][y]);
+      while (x !== 8 && y !== 8 && stop && validRightTop) {
+        if (character) {
+          console.log('RightTop', this.Fields[x][y]);
+        }
         switch (this.Fields[x][y].owner) {
           case 0:
             validRightTop = false;
@@ -443,7 +482,6 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
-                console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
                   this.Fields[xs[k]][ys[k]].owner = this.currentUser;
                 }
@@ -454,10 +492,11 @@ export class TableComponent implements OnInit {
             }
             break;
           default:
-            xs.push(x);
-            ys.push(y);
             if (x === 0 || y === 7) {
               validRightTop = false;
+            } else {
+              xs.push(x);
+              ys.push(y);
             }
             break;
         }
@@ -465,7 +504,10 @@ export class TableComponent implements OnInit {
         y++;
       }
     }
-
+    if (character) {
+      console.log('validRightTop', validRightTop);
+      console.log('validLeftBottom', validLeftBottom);
+    }
     if (validRightTop === true || validLeftBottom === true) {
       return true;
     }
