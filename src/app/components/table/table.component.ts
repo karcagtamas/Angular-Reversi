@@ -40,10 +40,26 @@ export class TableComponent implements OnInit {
 
   clickField(Field: Field) {
     console.log(Field);
-    /* console.log('Row', this.checkRow(Field));
-    console.log('Col', this.checkCol(Field));
+    console.log(this.currentUser);
+    /* console.log('Col', this.checkCol(Field));
     console.log('MainDiag', this.checkMainDiagonal(Field)); */
-
+    let valid = false;
+    if (this.checkRow(Field)) {
+      valid = true;
+    }
+    if (this.checkCol(Field)) {
+      valid = true;
+    }
+    if (this.checkMainDiagonal(Field)) {
+      valid = true;
+    }
+    if (this.checkNotMainDiagonal(Field)) {
+      valid = true;
+    }
+    if (valid) {
+      this.Fields[Field.x][Field.y].owner = this.currentUser;
+      this.currentUser = this.currentUser === 1 ? 2 : 1;
+    }
     /* if (this.checkRow(Field) || this.checkCol(Field) || this.checkMainDiagonal(Field)) {
       this.currentUser = this.currentUser === 1 ? 2 : 1;
     } */
@@ -61,216 +77,301 @@ export class TableComponent implements OnInit {
   }
 
   checkRow(Field: Field) {
-    let validLeft = true;
+    let validLeft;
+    let stop = true;
     let ys = [];
     if (Field.y > 1) {
-      for (let j = Field.y - 1; j >= 0 && validLeft; j--) {
-        switch (this.Fields[Field.x][j]) {
+      validLeft = true;
+      for (let j = Field.y - 1; j >= 0 && validLeft && stop; j--) {
+        switch (this.Fields[Field.x][j].owner) {
           case 0:
             validLeft = false;
             break;
           case this.currentUser:
-            for (let k = 0; k < ys.length; k++) {
-              this.Fields[Field.x][ys[k]].owner == this.currentUser;
+            console.log(ys);
+            if (ys.length > 0) {
+              for (let k = 0; k < ys.length; k++) {
+                this.Fields[Field.x][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validLeft = false;
             }
             break;
           default:
             ys.push(j);
+            if (j === 0) {
+              validLeft = false;
+            }
             break;
         }
       }
     }
-  }
-
-  checkRows(Field: Field): boolean {
-    let starty = 0;
-    let endy = 0;
-    for (let j = 0; j < 8 && starty === 0 && endy === 0; j++) {
-      if (
-        this.Fields[Field.x][j].owner === this.currentUser &&
-        Field.y !== j &&
-        Field.y !== j - 1 &&
-        Field.y !== j + 1
-      ) {
-        starty = Field.y > j ? j : Field.y;
-        endy = Field.y < j ? j : Field.y;
-      }
-    }
-    if (starty !== 0 && endy !== 0) {
-      for (let j = starty + 1; j < endy; j++) {
-        if (this.Fields[Field.x][j].owner === 0 || this.Fields[Field.x][j].owner === this.currentUser) {
-          return false;
+    let validRight;
+    ys = [];
+    stop = true;
+    if (Field.y < 6) {
+      validRight = true;
+      for (let j = Field.y + 1; j <= 7 && validRight && stop; j++) {
+        switch (this.Fields[Field.x][j].owner) {
+          case 0:
+            validRight = false;
+            break;
+          case this.currentUser:
+            if (ys.length > 0) {
+              for (let k = 0; k < ys.length; k++) {
+                this.Fields[Field.x][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validRight = false;
+            }
+            break;
+          default:
+            ys.push(j);
+            if (j === 7) {
+              validRight = false;
+            }
+            break;
         }
       }
-    } else {
-      return false;
     }
-    this.setRow(Field.x, starty, endy);
-    return true;
+    if (validLeft === true || validRight === true) {
+      return true;
+    }
+    return false;
   }
 
-  setRow(row: number, starty: number, endy: number): void {
-    for (let j = starty; j <= endy; j++) {
-      this.Fields[row][j].owner = this.currentUser;
-    }
-  }
-
-  checkCol(Field: Field): boolean {
-    let startx = 0;
-    let endx = 0;
-    for (let i = 0; i < 8 && startx === 0 && endx === 0; i++) {
-      if (
-        this.Fields[i][Field.y].owner === this.currentUser &&
-        Field.x !== i &&
-        Field.x !== i - 1 &&
-        Field.x !== i + 1
-      ) {
-        startx = Field.x > i ? i : Field.x;
-        endx = Field.x < i ? i : Field.x;
-      }
-    }
-    if (startx !== 0 && endx !== 0) {
-      for (let i = startx + 1; i < endx; i++) {
-        if (this.Fields[i][Field.y].owner === 0 || this.Fields[i][Field.y].owner === this.currentUser) {
-          return false;
+  checkCol(Field: Field) {
+    let validTop;
+    let stop = true;
+    let xs = [];
+    if (Field.x > 1) {
+      validTop = true;
+      for (let i = Field.x - 1; i >= 0 && validTop && stop; i--) {
+        switch (this.Fields[i][Field.y].owner) {
+          case 0:
+            validTop = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][Field.y].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validTop = false;
+            }
+            break;
+          default:
+            xs.push(i);
+            if (i === 0) {
+              validTop = false;
+            }
+            break;
         }
       }
-    } else {
-      return false;
     }
-    this.setCol(Field.y, startx, endx);
-    return true;
-  }
-
-  setCol(col: number, startx: number, endx: number): void {
-    for (let i = startx; i <= endx; i++) {
-      this.Fields[i][col].owner = this.currentUser;
+    let validBottom;
+    xs = [];
+    stop = true;
+    if (Field.x < 6) {
+      validBottom = true;
+      for (let i = Field.x + 1; i <= 7 && validBottom && stop; i++) {
+        switch (this.Fields[i][Field.y].owner) {
+          case 0:
+            validBottom = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][Field.y].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validBottom = false;
+            }
+            break;
+          default:
+            xs.push(i);
+            if (i === 7) {
+              validBottom = false;
+            }
+            break;
+        }
+      }
     }
+    if (validBottom === true || validTop === true) {
+      return true;
+    }
+    return false;
   }
 
   // A végén ne álljanak be az eredeti érékek a többi check miatt
 
   checkMainDiagonal(Field: Field): boolean {
-    let startx = 0;
-    let starty = 0;
-    let endx = 0;
-    let endy = 0;
-    let X = 0;
-    let Y = 0;
-    let length = 0;
-    if (Field.x === Field.y) {
-      X = 0;
-      Y = 0;
-      length = 8;
-    } else if (Field.x > Field.y) {
-      X = Field.x - Field.y - 1;
-      Y = 0;
-      length = 8 - Field.x;
-    } else if (Field.x < Field.y) {
-      X = 0;
-      Y = Field.y - Field.x - 1;
-      length = 8 - Field.y;
-    }
-    let x = X;
-    let y = Y;
-    for (let k = 0; k < length && startx === 0 && starty === 0 && endx === 0 && endy === 0; k++) {
-      if (
-        this.Fields[x][y].owner === this.currentUser &&
-        Field.x !== x &&
-        Field.y !== y &&
-        Field.x !== x - 1 &&
-        Field.y !== y - 1 &&
-        Field.x !== x + 1 &&
-        Field.y !== y + 1
-      ) {
-        startx = Field.x + Field.y > x + y ? x : Field.x;
-        starty = Field.x + Field.y > x + y ? y : Field.y;
-        endx = Field.x + Field.y < x + y ? x : Field.x;
-        endy = Field.x + Field.y < x + y ? y : Field.y;
+    let validRigthBottom;
+    let stop = true;
+    let x = Field.x - 1;
+    let y = Field.y - 1;
+    let xs = [];
+    let ys = [];
+    if (Field.x > 1 && Field.y > 1) {
+      validRigthBottom = true;
+      while (x !== 0 && y !== 0 && stop && validRigthBottom) {
+        console.log('RightBottom', this.Fields[x][y]);
+        switch (this.Fields[x][y].owner) {
+          case 0:
+            validRigthBottom = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0 && ys.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validRigthBottom = false;
+            }
+            break;
+          default:
+            xs.push(x);
+            ys.push(y);
+            if (x === 0 || y === 0) {
+              validRigthBottom = false;
+            }
+            break;
+        }
+        x--;
+        y--;
       }
-      x++;
-      y++;
+    }
+    let validLeftTop;
+    stop = true;
+    x = Field.x + 1;
+    y = Field.y + 1;
+    xs = [];
+    ys = [];
+    if (Field.x < 6 && Field.y < 6) {
+      validLeftTop = true;
+      while (x !== 7 && y !== 7 && stop && validLeftTop) {
+        console.log('LeftTop', this.Fields[x][y]);
+        switch (this.Fields[x][y].owner) {
+          case 0:
+            validLeftTop = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0 && ys.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validLeftTop = false;
+            }
+            break;
+          default:
+            xs.push(x);
+            ys.push(y);
+            if (x === 7 || y === 7) {
+              validLeftTop = false;
+            }
+            break;
+        }
+        x++;
+        y++;
+      }
     }
 
-    if (startx !== 0 && starty !== 0 && endx !== 0 && endy !== 0) {
-      for (let i = startx + 1; i < endx; i++) {
-        if (this.Fields[i][Field.y].owner === 0 || this.Fields[i][Field.y].owner === this.currentUser) {
-          return false;
-        }
-      }
-      while (startx !== endx && starty !== endy) {
-        if (this.Fields[startx][starty].owner === 0 || this.Fields[startx][starty] === this.currentUser) {
-          return false;
-        }
-        startx++;
-        starty++;
-      }
-    } else {
-      return false;
+    if (validRigthBottom === true || validLeftTop === true) {
+      return true;
     }
-    // this.setCol(Field.y, startx, endx);
-    return true;
+    return false;
   }
 
   checkNotMainDiagonal(Field: Field): boolean {
-    let startx = 0;
-    let starty = 0;
-    let endx = 0;
-    let endy = 0;
-    let X = 0;
-    let Y = 0;
-    let length = 0;
-    if (Field.x + Field.y === 7) {
-      X = 0;
-      Y = 7;
-      length = 8;
-    } else if (Field.x > Field.y) {
-      X = Field.x - Field.y - 1;
-      Y = 0;
-      length = 8 - Field.x;
-    } else if (Field.x < Field.y) {
-      X = 0;
-      Y = Field.y - Field.x - 1;
-      length = 8 - Field.y;
-    }
-    let x = X;
-    let y = Y;
-    for (let k = 0; k < length && startx === 0 && starty === 0 && endx === 0 && endy === 0; k++) {
-      if (
-        this.Fields[x][y].owner === this.currentUser &&
-        Field.x !== x &&
-        Field.y !== y &&
-        Field.x !== x - 1 &&
-        Field.y !== y - 1 &&
-        Field.x !== x + 1 &&
-        Field.y !== y + 1
-      ) {
-        startx = Field.x + Field.y > x + y ? x : Field.x;
-        starty = Field.x + Field.y > x + y ? y : Field.y;
-        endx = Field.x + Field.y < x + y ? x : Field.x;
-        endy = Field.x + Field.y < x + y ? y : Field.y;
+    let validLeftBottom;
+    let stop = true;
+    let x = Field.x + 1;
+    let y = Field.y - 1;
+    let xs = [];
+    let ys = [];
+    if (Field.x < 6 && Field.y > 1) {
+      validLeftBottom = true;
+      while (x !== 7 && y !== 0 && stop && validLeftBottom) {
+        console.log('LeftBottom', this.Fields[x][y]);
+        switch (this.Fields[x][y].owner) {
+          case 0:
+            validLeftBottom = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0 && ys.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validLeftBottom = false;
+            }
+            break;
+          default:
+            xs.push(x);
+            ys.push(y);
+            if (x === 7 || y === 0) {
+              validLeftBottom = false;
+            }
+            break;
+        }
+        x++;
+        y--;
       }
-      x++;
-      y++;
+    }
+    let validRightTop;
+    stop = true;
+    x = Field.x - 1;
+    y = Field.y + 1;
+    xs = [];
+    ys = [];
+    if (Field.x > 1 && Field.y < 6) {
+      validRightTop = true;
+      while (x !== 7 && y !== 7 && stop && validRightTop) {
+        console.log('LeftTop', this.Fields[x][y]);
+        switch (this.Fields[x][y].owner) {
+          case 0:
+            validRightTop = false;
+            break;
+          case this.currentUser:
+            console.log(xs);
+            if (xs.length > 0 && ys.length > 0) {
+              for (let k = 0; k < xs.length; k++) {
+                this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+              }
+              stop = false;
+            } else {
+              validRightTop = false;
+            }
+            break;
+          default:
+            xs.push(x);
+            ys.push(y);
+            if (x === 0 || y === 7) {
+              validRightTop = false;
+            }
+            break;
+        }
+        x--;
+        y++;
+      }
     }
 
-    if (startx !== 0 && starty !== 0 && endx !== 0 && endy !== 0) {
-      for (let i = startx + 1; i < endx; i++) {
-        if (this.Fields[i][Field.y].owner === 0 || this.Fields[i][Field.y].owner === this.currentUser) {
-          return false;
-        }
-      }
-      while (startx !== endx && starty !== endy) {
-        if (this.Fields[startx][starty].owner === 0 || this.Fields[startx][starty] === this.currentUser) {
-          return false;
-        }
-        startx++;
-        starty++;
-      }
-    } else {
-      return false;
+    if (validRightTop === true || validLeftBottom === true) {
+      return true;
     }
-    // this.setCol(Field.y, startx, endx);
-    return true;
+    return false;
   }
 }
