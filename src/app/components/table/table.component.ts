@@ -180,9 +180,12 @@ export class TableComponent implements OnInit {
           case this.currentUser:
             if (ys.length > 0) {
               if (character) {
-                for (let k = 0; k < ys.length; k++) {
+                /* for (let k = 0; k < ys.length; k++) {
                   this.Fields[Field.x][ys[k]].owner = this.currentUser;
-                }
+                } */
+                ys.forEach(k => {
+                  this.Fields[Field.x][k].owner = this.currentUser;
+                });
               }
               stop = false;
             } else {
