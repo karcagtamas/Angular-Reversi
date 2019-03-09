@@ -54,6 +54,9 @@ export class TableComponent implements OnInit {
     if (this.game && this.isEnd()) {
       this.game = false;
       this.winner = this.first > this.second ? 1 : this.first === this.second ? 3 : 2;
+    } else {
+      this.alert = 'Nincs lehetőség a passzolásra';
+      setTimeout(() => (this.alert = ''), 3000);
     }
   }
 

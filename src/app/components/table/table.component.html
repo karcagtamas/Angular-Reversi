@@ -1,10 +1,11 @@
 <div class="m-4" class="text-center">
-  <h1 *ngIf="currentUser === 1">Első játékos következik (Fekete) Pontok: {{ first }}</h1>
-  <h1 *ngIf="currentUser === 2">Második játékos következik (Fehér) {{ second }}</h1>
-  <h2 *ngIf="winner === 1">Győztes: Első játékos Pont: {{ first }}</h2>
-  <h2 *ngIf="winner === 2">Győztes: Második játékos Pont: {{ second }}</h2>
-  <h2 *ngIf="winner === 3">Döntetlen! Pont: {{ second }}</h2>
-  <div class="alert alert-warning" *ngIf="alert">{{ alert }}</div>
+  <h1>Reversi</h1>
+  <h2 *ngIf="currentUser === 1">Első játékos következik (FEKETE) Pontok: {{ first }}</h2>
+  <h2 *ngIf="currentUser === 2">Második játékos következik (FEHÉR) {{ second }}</h2>
+  <h3 *ngIf="winner === 1">Győztes: Első játékos (FEKETE) Pont: {{ first }}</h3>
+  <h3 *ngIf="winner === 2">Győztes: Második játékos (FEHÉR) Pont: {{ second }}</h3>
+  <h3 *ngIf="winner === 3">Döntetlen! Pont: {{ second }}</h3>
+  <div class="alert alert-danger" *ngIf="alert"><strong>HIBA!</strong> {{ alert }}</div>
   <button class="btn btn-primary" (click)="pass()">PASSZ</button>
   <button class="btn btn-primary" (click)="restart()">RESTART</button>
   <div id="field">

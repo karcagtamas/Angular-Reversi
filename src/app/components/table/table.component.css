@@ -5,3 +5,8 @@
 .row {
   margin: auto;
 }
+button {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 1rem;
+}
