@@ -2,16 +2,19 @@
   width: 100px;
   height: 100px;
   background-color: goldenrod;
+  padding: 10px;
 }
 
 #first {
   background-color: black;
   border-radius: 50%;
   height: 100%;
+  box-shadow: 5px 5px 8px #474747;
 }
 
 #second {
   background-color: white;
   border-radius: 50%;
   height: 100%;
+  box-shadow: 5px 5px 8px #474747;
 }
