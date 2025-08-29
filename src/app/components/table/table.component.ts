@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Field } from 'src/app/models/field.model';
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.css']
+  styleUrls: ['./table.component.css'],
 })
 export class TableComponent implements OnInit {
   Fields = [];
@@ -39,7 +38,7 @@ export class TableComponent implements OnInit {
         fields.push({
           x: i,
           y: j,
-          owner: 0
+          owner: 0,
         } as Field);
       }
       this.Fields.push(fields);
@@ -102,8 +101,6 @@ export class TableComponent implements OnInit {
 
   clickField(Field: Field) {
     if (this.game) {
-      console.log(Field);
-      console.log(this.currentUser);
       let valid = false;
       if (this.checkRow(Field, true)) {
         valid = true;
@@ -186,7 +183,7 @@ export class TableComponent implements OnInit {
                 /* for (let k = 0; k < ys.length; k++) {
                   this.Fields[Field.x][ys[k]].owner = this.currentUser;
                 } */
-                ys.forEach(k => {
+                ys.forEach((k) => {
                   this.Fields[Field.x][k].owner = this.currentUser;
                 });
               }
@@ -510,10 +507,6 @@ export class TableComponent implements OnInit {
         x--;
         y++;
       }
-    }
-    if (character) {
-      console.log('validRightTop', validRightTop);
-      console.log('validLeftBottom', validLeftBottom);
     }
     if (validRightTop === true || validLeftBottom === true) {
       return true;
