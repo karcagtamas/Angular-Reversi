@@ -66,18 +66,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "reversi:build"
+            "buildTarget": "reversi:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "reversi:build:production"
+              "buildTarget": "reversi:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "reversi:build"
+            "buildTarget": "reversi:build"
           }
         },
         "test": {
