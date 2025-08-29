@@ -1,4 +1,8 @@
 <div class="field border rounded" (click)="clickField()">
-  <div id="first" *ngIf="Field.owner === 1"></div>
-  <div id="second" *ngIf="Field.owner === 2"></div>
+  @if (Field().owner === 1) {
+    <div id="first"></div>
+  }
+  @if (Field().owner === 2) {
+    <div id="second"></div>
+  }
 </div>

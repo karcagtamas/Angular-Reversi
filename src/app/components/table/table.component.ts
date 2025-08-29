@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Field } from 'src/app/models/field.model';
+import { FieldComponent } from '../field/field.component';
 
 @Component({
-    selector: 'app-table',
-    templateUrl: './table.component.html',
-    styleUrls: ['./table.component.css'],
-    standalone: false
+  selector: 'app-table',
+  templateUrl: './table.component.html',
+  styleUrls: ['./table.component.css'],
+  imports: [FieldComponent],
 })
 export class TableComponent implements OnInit {
   Fields = [];
@@ -15,8 +16,6 @@ export class TableComponent implements OnInit {
   second = 2;
   winner = 0;
   game = true;
-
-  constructor() {}
 
   ngOnInit() {
     this.setToStart();

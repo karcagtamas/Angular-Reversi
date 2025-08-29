@@ -1,23 +1,19 @@
 import { Field } from './../../models/field.model';
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 @Component({
-    selector: 'app-field',
-    templateUrl: './field.component.html',
-    styleUrls: ['./field.component.css'],
-    standalone: false
+  selector: 'app-field',
+  templateUrl: './field.component.html',
+  styleUrls: ['./field.component.css'],
 })
-export class FieldComponent implements OnInit {
-  @Input() Field: Field = null;
-  @Output() clickFieldEvent = new EventEmitter();
-
-  constructor() {}
-
-  ngOnInit() {}
+export class FieldComponent {
+  readonly Field = input<Field>(null);
+  readonly clickFieldEvent = output<Field>();
 
   clickField() {
-    if (this.Field.owner === 0) {
-      this.clickFieldEvent.emit(this.Field);
+    const FieldValue = this.Field();
+    if (FieldValue.owner === 0) {
+      this.clickFieldEvent.emit(FieldValue);
     }
   }
 }

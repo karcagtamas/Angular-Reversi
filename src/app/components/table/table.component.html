@@ -1,16 +1,27 @@
 <div class="m-4" class="text-center">
   <h1>Reversi</h1>
-  <h2 *ngIf="currentUser === 1">Első játékos következik (FEKETE) Pontok: {{ first }}</h2>
-  <h2 *ngIf="currentUser === 2">Második játékos következik (FEHÉR) {{ second }}</h2>
-  <h3 *ngIf="winner === 1">Győztes: Első játékos (FEKETE) Pont: {{ first }}</h3>
-  <h3 *ngIf="winner === 2">Győztes: Második játékos (FEHÉR) Pont: {{ second }}</h3>
-  <h3 *ngIf="winner === 3">Döntetlen! Pont: {{ second }}</h3>
-  <div class="alert alert-danger" *ngIf="alert"><strong>HIBA!</strong> {{ alert }}</div>
+  @if (currentUser === 1) {
+  <h2>Első játékos következik (FEKETE) Pontok: {{ first }}</h2>
+  } @if (currentUser === 2) {
+  <h2>Második játékos következik (FEHÉR) {{ second }}</h2>
+  } @if (winner === 1) {
+  <h3>Győztes: Első játékos (FEKETE) Pont: {{ first }}</h3>
+  } @if (winner === 2) {
+  <h3>Győztes: Második játékos (FEHÉR) Pont: {{ second }}</h3>
+  } @if (winner === 3) {
+  <h3>Döntetlen! Pont: {{ second }}</h3>
+  } @if (alert) {
+  <div class="alert alert-danger"><strong>HIBA!</strong> {{ alert }}</div>
+  }
   <button class="btn btn-primary" (click)="pass()">PASSZ</button>
   <button class="btn btn-primary" (click)="restart()">RESTART</button>
   <div id="field">
-    <div *ngFor="let item of Fields" class="row">
-      <app-field *ngFor="let i of item" [Field]="i" (clickFieldEvent)="clickField($event)"></app-field>
+    @for (item of Fields; track item) {
+    <div class="row">
+      @for (i of item; track i) {
+      <app-field [Field]="i" (clickFieldEvent)="clickField($event)" />
+      }
     </div>
+    }
   </div>
 </div>
