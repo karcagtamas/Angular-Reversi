@@ -2,9 +2,10 @@ import { Field } from './../../models/field.model';
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
-  selector: 'app-field',
-  templateUrl: './field.component.html',
-  styleUrls: ['./field.component.css'],
+    selector: 'app-field',
+    templateUrl: './field.component.html',
+    styleUrls: ['./field.component.css'],
+    standalone: false
 })
 export class FieldComponent implements OnInit {
   @Input() Field: Field = null;

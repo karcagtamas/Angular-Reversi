@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { Field } from 'src/app/models/field.model';
 
 @Component({
-  selector: 'app-table',
-  templateUrl: './table.component.html',
-  styleUrls: ['./table.component.css'],
+    selector: 'app-table',
+    templateUrl: './table.component.html',
+    styleUrls: ['./table.component.css'],
+    standalone: false
 })
 export class TableComponent implements OnInit {
   Fields = [];
