@@ -7,16 +7,9 @@ import { TableComponent } from './components/table/table.component';
 import { FieldComponent } from './components/field/field.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    TableComponent,
-    FieldComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule
-  ],
+  declarations: [AppComponent, TableComponent, FieldComponent],
+  imports: [BrowserModule, AppRoutingModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
