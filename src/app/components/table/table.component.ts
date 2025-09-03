@@ -93,8 +93,8 @@ export class TableComponent implements OnInit {
       return true;
     }
 
-    return this.mapFields((field) => {
-      if (!field.isPlayerEmpty()) {
+    return !this.mapFields((field) => {
+      if (field.isPlayerEmpty()) {
         return false;
       }
 
