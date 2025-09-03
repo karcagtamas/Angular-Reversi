@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Field } from 'src/app/models/field.model';
 import { FieldComponent } from '../field/field.component';
+import { GameState, Player, PlayerMeta } from 'src/app/models/game.model';
+
+const HEIGHT = 8;
+const WIDTH = 8;
 
 @Component({
   selector: 'app-table',
@@ -9,16 +13,29 @@ import { FieldComponent } from '../field/field.component';
   imports: [FieldComponent],
 })
 export class TableComponent implements OnInit {
-  Fields = [];
-  currentUser = 1;
+  fields: Field[][] = [];
   alert: string = null;
-  first = 2;
-  second = 2;
-  winner = 0;
-  game = true;
+
+  private readonly players = [Player.Black, Player.White];
+  protected currentPlayerIndex = 0;
+  protected readonly playerMeta = PlayerMeta;
+
+  protected readonly gameState: GameState = new GameState();
 
   ngOnInit() {
     this.setToStart();
+  }
+
+  protected get currentPlayer(): Player {
+    return this.players[this.currentPlayerIndex];
+  }
+
+  protected set currentPlayer(player: Player) {
+    this.currentPlayerIndex = this.players.indexOf(player);
+  }
+
+  protected get nextPlayer(): Player {
+    return this.players[(this.currentPlayerIndex + 1) % this.players.length];
   }
 
   restart() {
@@ -26,165 +43,141 @@ export class TableComponent implements OnInit {
   }
 
   setToStart() {
-    this.Fields = [];
-    this.currentUser = 1;
-    this.first = 2;
-    this.second = 2;
-    this.winner = 0;
-    this.game = true;
-    for (let i = 0; i < 8; i++) {
-      const fields: Field[] = [];
-      for (let j = 0; j < 8; j++) {
-        fields.push({
-          x: i,
-          y: j,
-          owner: 0,
-        } as Field);
+    const fields: Field[][] = [];
+    this.currentPlayer = Player.Black;
+
+    // Generate fields
+    for (let i = 0; i < HEIGHT; i++) {
+      const row: Field[] = [];
+      for (let j = 0; j < WIDTH; j++) {
+        row.push(new Field({ x: i, y: j }));
       }
-      this.Fields.push(fields);
+      fields.push(row);
     }
-    this.Fields[3][3].owner = 1;
-    this.Fields[3][4].owner = 2;
-    this.Fields[4][3].owner = 2;
-    this.Fields[4][4].owner = 1;
+
+    // Inital fields
+    //assert(HEIGHT === WIDTH);
+    //assert(HEIGHT % 2 === 0);
+    fields[HEIGHT / 2 - 1][WIDTH / 2 - 1].player = Player.Black;
+    fields[HEIGHT / 2 - 1][WIDTH / 2].player = Player.White;
+    fields[HEIGHT / 2][WIDTH / 2 - 1].player = Player.White;
+    fields[HEIGHT / 2][WIDTH / 2].player = Player.Black;
+
+    this.fields = fields;
+
+    // Initial scores
+    this.gameState.scores[Player.Black] = 2;
+    this.gameState.scores[Player.White] = 2;
   }
 
   pass() {
-    if (this.game && this.isEnd()) {
-      this.game = false;
-      this.winner = this.first > this.second ? 1 : this.first === this.second ? 3 : 2;
+    if (this.gameState.isInProgress() && this.isEnd()) {
+      this.updateGameState();
     } else {
-      this.alert = 'Nincs lehetőség a passzolásra';
-      setTimeout(() => (this.alert = ''), 3000);
+      this.setAlert('Nincs lehetőség a passzolásra');
     }
   }
 
   isEnd(): boolean {
-    if (!this.checkHasField(1)) {
+    // Any player has zero score (lost his/her tiles)
+    if (Object.entries(this.gameState.scores).some(([_, value]) => value <= 0)) {
       return true;
     }
-    if (!this.checkHasField(2)) {
+
+    const total = Object.entries(this.gameState.scores)
+      .map(([_, value]) => value)
+      .reduce((a, b) => a + b);
+
+    // All tile has been filled
+    if (total === HEIGHT * WIDTH) {
       return true;
     }
-    if (!this.checkHasAvailable()) {
-      return true;
-    } else {
-      let allvalid = true;
-      for (let i = 0; i < 8 && allvalid; i++) {
-        for (let j = 0; j < 8 && allvalid; j++) {
-          if (this.Fields[i][j].owner === 0) {
-            let valid = false;
-            if (this.checkRow(this.Fields[i][j], false)) {
-              valid = true;
-            }
-            if (this.checkCol(this.Fields[i][j], false)) {
-              valid = true;
-            }
-            if (this.checkMainDiagonal(this.Fields[i][j], false)) {
-              valid = true;
-            }
-            if (this.checkNotMainDiagonal(this.Fields[i][j], false)) {
-              valid = true;
-            }
-            if (valid) {
-              allvalid = false;
-            }
-          }
-        }
+
+    return this.mapFields((field) => {
+      if (!field.isPlayerEmpty()) {
+        return false;
       }
-      if (allvalid) {
-        return true;
-      }
-    }
-    return false;
+
+      return (
+        this.checkRow(field, false) ||
+        this.checkCol(field, false) ||
+        this.checkMainDiagonal(field, false) ||
+        this.checkNotMainDiagonal(field, false)
+      );
+    })
+      .map((row) => row.some((value) => value))
+      .some((value) => value);
   }
 
-  clickField(Field: Field) {
-    if (this.game) {
-      let valid = false;
-      if (this.checkRow(Field, true)) {
-        valid = true;
-      }
-      if (this.checkCol(Field, true)) {
-        valid = true;
-      }
-      if (this.checkMainDiagonal(Field, true)) {
-        valid = true;
-      }
-      if (this.checkNotMainDiagonal(Field, true)) {
-        valid = true;
-      }
-      if (valid) {
-        this.Fields[Field.x][Field.y].owner = this.currentUser;
-        this.currentUser = this.currentUser === 1 ? 2 : 1;
-        this.checkValues();
-        if (this.isEnd()) {
-          this.game = false;
-          this.winner = this.first > this.second ? 1 : this.first === this.second ? 3 : 2;
-        }
-      }
+  clickField(field: Field) {
+    if (!this.gameState.isInProgress() || !field.isPlayerEmpty()) {
+      return;
     }
-    console.log('---------------------------------');
-  }
 
-  checkHasField(player: number): boolean {
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (this.Fields[i][j].owner === player) {
-          return true;
-        }
+    let valid = false;
+    if (this.checkRow(field, true)) {
+      valid = true;
+    }
+    if (this.checkCol(field, true)) {
+      valid = true;
+    }
+    if (this.checkMainDiagonal(field, true)) {
+      valid = true;
+    }
+    if (this.checkNotMainDiagonal(field, true)) {
+      valid = true;
+    }
+    if (valid) {
+      this.fields[field.point.x][field.point.y].player = this.currentPlayer;
+      this.currentPlayer = this.nextPlayer;
+      this.checkValues();
+      if (this.isEnd()) {
+        this.updateGameState();
       }
     }
-    return false;
-  }
-
-  checkHasAvailable(): boolean {
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (this.Fields[i][j].owner === 0) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   checkValues(): void {
-    this.first = 0;
-    this.second = 0;
+    let scores: Record<Player, number> = {
+      [Player.Black]: 0,
+      [Player.White]: 0,
+    };
+
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        if (this.Fields[i][j].owner === 1) {
-          this.first++;
-        } else if (this.Fields[i][j].owner === 2) {
-          this.second++;
+        if (!this.fields[i][j].isPlayerEmpty()) {
+          scores[this.fields[i][j].player]++;
         }
       }
     }
+
+    this.players.forEach((player) => {
+      this.gameState.scores[player] = scores[player];
+    });
   }
 
-  checkRow(Field: Field, character: boolean) {
+  checkRow(field: Field, character: boolean) {
     let validLeft;
     let stop = true;
     let ys = [];
-    if (Field.y > 1) {
+    if (field.point.y > 1) {
       validLeft = true;
-      for (let j = Field.y - 1; j >= 0 && validLeft && stop; j--) {
+      for (let j = field.point.y - 1; j >= 0 && validLeft && stop; j--) {
         if (character) {
-          console.log('Left', this.Fields[Field.x][j]);
+          console.log('Left', this.fields[field.point.x][j]);
         }
-        switch (this.Fields[Field.x][j].owner) {
-          case 0:
+        switch (this.fields[field.point.x][j].player) {
+          case null:
             validLeft = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (ys.length > 0) {
               if (character) {
                 /* for (let k = 0; k < ys.length; k++) {
                   this.Fields[Field.x][ys[k]].owner = this.currentUser;
                 } */
                 ys.forEach((k) => {
-                  this.Fields[Field.x][k].owner = this.currentUser;
+                  this.fields[field.point.x][k].player = this.currentPlayer;
                 });
               }
               stop = false;
@@ -205,21 +198,21 @@ export class TableComponent implements OnInit {
     let validRight;
     ys = [];
     stop = true;
-    if (Field.y < 6) {
+    if (field.point.y < 6) {
       validRight = true;
-      for (let j = Field.y + 1; j <= 7 && validRight && stop; j++) {
+      for (let j = field.point.y + 1; j <= 7 && validRight && stop; j++) {
         if (character) {
-          console.log('Right', this.Fields[Field.x][j]);
+          console.log('Right', this.fields[field.point.x][j]);
         }
-        switch (this.Fields[Field.x][j].owner) {
-          case 0:
+        switch (this.fields[field.point.x][j].player) {
+          case null:
             validRight = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (ys.length > 0) {
               if (character) {
                 for (let k = 0; k < ys.length; k++) {
-                  this.Fields[Field.x][ys[k]].owner = this.currentUser;
+                  this.fields[field.point.x][ys[k]].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -247,26 +240,26 @@ export class TableComponent implements OnInit {
     return false;
   }
 
-  checkCol(Field: Field, character: boolean) {
+  checkCol(field: Field, character: boolean) {
     let validTop;
     let stop = true;
     let xs = [];
-    if (Field.x > 1) {
+    if (field.point.x > 1) {
       validTop = true;
-      for (let i = Field.x - 1; i >= 0 && validTop && stop; i--) {
+      for (let i = field.point.x - 1; i >= 0 && validTop && stop; i--) {
         if (character) {
-          console.log('Top', this.Fields[i][Field.y]);
+          console.log('Top', this.fields[i][field.point.y]);
         }
-        switch (this.Fields[i][Field.y].owner) {
-          case 0:
+        switch (this.fields[i][field.point.y].player) {
+          case null:
             validTop = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0) {
               if (character) {
                 console.log('Rajz');
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][Field.y].owner = this.currentUser;
+                  this.fields[xs[k]][field.point.y].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -287,21 +280,21 @@ export class TableComponent implements OnInit {
     let validBottom;
     xs = [];
     stop = true;
-    if (Field.x < 6) {
+    if (field.point.x < 6) {
       validBottom = true;
-      for (let i = Field.x + 1; i <= 7 && validBottom && stop; i++) {
+      for (let i = field.point.x + 1; i <= 7 && validBottom && stop; i++) {
         if (character) {
-          console.log('Bottom', this.Fields[i][Field.y]);
+          console.log('Bottom', this.fields[i][field.point.y]);
         }
-        switch (this.Fields[i][Field.y].owner) {
-          case 0:
+        switch (this.fields[i][field.point.y].player) {
+          case null:
             validBottom = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0) {
               if (character) {
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][Field.y].owner = this.currentUser;
+                  this.fields[xs[k]][field.point.y].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -332,28 +325,28 @@ export class TableComponent implements OnInit {
   // A végén ne álljanak be az eredeti érékek a többi check miatt
 
   // tslint:disable-next-line: no-shadowed-variable
-  checkMainDiagonal(Field: Field, character: boolean): boolean {
+  checkMainDiagonal(field: Field, character: boolean): boolean {
     let validRigthBottom;
     let stop = true;
-    let x = Field.x - 1;
-    let y = Field.y - 1;
+    let x = field.point.x - 1;
+    let y = field.point.y - 1;
     let xs = [];
     let ys = [];
-    if (Field.x > 1 && Field.y > 1) {
+    if (field.point.x > 1 && field.point.y > 1) {
       validRigthBottom = true;
       while (x !== -1 && y !== -1 && stop && validRigthBottom) {
         if (character) {
-          console.log('RightBottom', this.Fields[x][y]);
+          console.log('RightBottom', this.fields[x][y]);
         }
-        switch (this.Fields[x][y].owner) {
-          case 0:
+        switch (this.fields[x][y].player) {
+          case null:
             validRigthBottom = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -376,25 +369,25 @@ export class TableComponent implements OnInit {
     }
     let validLeftTop;
     stop = true;
-    x = Field.x + 1;
-    y = Field.y + 1;
+    x = field.point.x + 1;
+    y = field.point.y + 1;
     xs = [];
     ys = [];
-    if (Field.x < 6 && Field.y < 6) {
+    if (field.point.x < 6 && field.point.y < 6) {
       validLeftTop = true;
       while (x !== 8 && y !== 8 && stop && validLeftTop) {
         if (character) {
-          console.log('LeftTop', this.Fields[x][y]);
+          console.log('LeftTop', this.fields[x][y]);
         }
-        switch (this.Fields[x][y].owner) {
-          case 0:
+        switch (this.fields[x][y].player) {
+          case null:
             validLeftTop = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -425,28 +418,28 @@ export class TableComponent implements OnInit {
     return false;
   }
 
-  checkNotMainDiagonal(Field: Field, character: boolean): boolean {
+  checkNotMainDiagonal(field: Field, character: boolean): boolean {
     let validLeftBottom;
     let stop = true;
-    let x = Field.x + 1;
-    let y = Field.y - 1;
+    let x = field.point.x + 1;
+    let y = field.point.y - 1;
     let xs = [];
     let ys = [];
-    if (Field.x < 6 && Field.y > 1) {
+    if (field.point.x < 6 && field.point.y > 1) {
       validLeftBottom = true;
       while (x !== 8 && y !== -1 && stop && validLeftBottom) {
         if (character) {
-          console.log('LeftBottom', this.Fields[x][y]);
+          console.log('LeftBottom', this.fields[x][y]);
         }
-        switch (this.Fields[x][y].owner) {
-          case 0:
+        switch (this.fields[x][y].player) {
+          case null:
             validLeftBottom = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -469,25 +462,25 @@ export class TableComponent implements OnInit {
     }
     let validRightTop;
     stop = true;
-    x = Field.x - 1;
-    y = Field.y + 1;
+    x = field.point.x - 1;
+    y = field.point.y + 1;
     xs = [];
     ys = [];
-    if (Field.x > 1 && Field.y < 6) {
+    if (field.point.x > 1 && field.point.y < 6) {
       validRightTop = true;
       while (x !== 8 && y !== 8 && stop && validRightTop) {
         if (character) {
-          console.log('RightTop', this.Fields[x][y]);
+          console.log('RightTop', this.fields[x][y]);
         }
-        switch (this.Fields[x][y].owner) {
-          case 0:
+        switch (this.fields[x][y].player) {
+          case null:
             validRightTop = false;
             break;
-          case this.currentUser:
+          case this.currentPlayer:
             if (xs.length > 0 && ys.length > 0) {
               if (character) {
                 for (let k = 0; k < xs.length; k++) {
-                  this.Fields[xs[k]][ys[k]].owner = this.currentUser;
+                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
                 }
               }
               stop = false;
@@ -512,5 +505,39 @@ export class TableComponent implements OnInit {
       return true;
     }
     return false;
+  }
+
+  private updateGameState(): void {
+    let maximum = 0;
+    for (const player of this.players) {
+      const score = this.gameState.scores[player];
+
+      if (score > maximum) {
+        maximum = score;
+      }
+    }
+
+    const players = this.players.filter((player) => {
+      return maximum === this.gameState.scores[player];
+    });
+
+    if (players.length === 0) {
+      this.gameState.progress = 'progressing';
+    } else if (players.length === 1) {
+      this.gameState.progress = players[0];
+    } else {
+      this.gameState.progress = 'draw';
+    }
+  }
+
+  private setAlert(message: string): void {
+    this.alert = message;
+    setTimeout(() => (this.alert = ''), 3000);
+  }
+
+  private mapFields<T>(lambda: (field: Field) => T): T[][] {
+    return this.fields.map((row) => {
+      return row.map((field) => lambda(field));
+    });
   }
 }

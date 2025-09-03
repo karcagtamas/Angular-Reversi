@@ -1,25 +1,19 @@
 <div class="m-4" class="text-center">
   <h1>Reversi</h1>
-  @if (currentUser === 1) {
-  <h2>Első játékos következik (FEKETE) Pontok: {{ first }}</h2>
-  } @if (currentUser === 2) {
-  <h2>Második játékos következik (FEHÉR) {{ second }}</h2>
-  } @if (winner === 1) {
-  <h3>Győztes: Első játékos (FEKETE) Pont: {{ first }}</h3>
-  } @if (winner === 2) {
-  <h3>Győztes: Második játékos (FEHÉR) Pont: {{ second }}</h3>
-  } @if (winner === 3) {
-  <h3>Döntetlen! Pont: {{ second }}</h3>
-  } @if (alert) {
+  <h2>Következő játékos: {{ playerMeta[currentPlayer].name }} | Pontok: {{ gameState.scores[currentPlayer] }}</h2>
+
+  @switch (gameState.progress) { @case ('draw') { Döntetlen! } @case ('progressing') { Progressing! } @default {
+  <h3>Győztes: {{ playerMeta[gameState.progress].name }} | Pontok: {{ gameState.scores[gameState.progress] }}</h3>
+  } } @if (alert) {
   <div class="alert alert-danger"><strong>HIBA!</strong> {{ alert }}</div>
   }
   <button class="btn btn-primary" (click)="pass()">PASSZ</button>
   <button class="btn btn-primary" (click)="restart()">RESTART</button>
   <div id="field">
-    @for (item of Fields; track item) {
+    @for (item of fields; track item) {
     <div class="row">
       @for (i of item; track i) {
-      <app-field [Field]="i" (clickFieldEvent)="clickField($event)" />
+      <app-field [field]="i" (clickFieldEvent)="clickField($event)" />
       }
     </div>
     }

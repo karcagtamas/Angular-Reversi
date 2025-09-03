@@ -1,8 +1,7 @@
 <div class="field border rounded" (click)="clickField()">
-  @if (Field().owner === 1) {
-    <div id="first"></div>
-  }
-  @if (Field().owner === 2) {
-    <div id="second"></div>
-  }
+  @switch(field().player) { @case (0) {
+  <div id="first"></div>
+  } @case(1) {
+  <div id="second"></div>
+  } }
 </div>

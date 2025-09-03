@@ -7,13 +7,12 @@ import { Component, input, output } from '@angular/core';
   styleUrls: ['./field.component.css'],
 })
 export class FieldComponent {
-  readonly Field = input<Field>(null);
+  readonly field = input<Field>(null);
   readonly clickFieldEvent = output<Field>();
 
   clickField() {
-    const FieldValue = this.Field();
-    if (FieldValue.owner === 0) {
-      this.clickFieldEvent.emit(FieldValue);
+    if (this.field().isPlayerEmpty()) {
+      this.clickFieldEvent.emit(this.field());
     }
   }
 }
