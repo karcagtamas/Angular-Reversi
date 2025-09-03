@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Field } from 'src/app/models/field.model';
+import { Field, Point } from 'src/app/models/field.model';
 import { FieldComponent } from '../field/field.component';
 import { GameState, Player, PlayerMeta } from 'src/app/models/game.model';
 
@@ -94,13 +94,13 @@ export class TableComponent implements OnInit {
     }
 
     return !this.mapFields((field) => {
-      if (field.isPlayerEmpty()) {
+      if (!field.isPlayerEmpty()) {
         return false;
       }
 
       return (
-        this.checkRow(field, false) ||
-        this.checkCol(field, false) ||
+        this.getValidRowFieldPairs(field).length > 0 ||
+        this.getValidColFieldPairs(field).length > 0 ||
         this.checkMainDiagonal(field, false) ||
         this.checkNotMainDiagonal(field, false)
       );
@@ -115,12 +115,13 @@ export class TableComponent implements OnInit {
     }
 
     let valid = false;
-    if (this.checkRow(field, true)) {
-      valid = true;
-    }
-    if (this.checkCol(field, true)) {
-      valid = true;
-    }
+
+    const rowFieldPairs = this.getValidRowFieldPairs(field);
+    const colFieldPairs = this.getValidColFieldPairs(field);
+    const fields = [...rowFieldPairs, ...colFieldPairs];
+
+    valid = fields.length > 0;
+
     if (this.checkMainDiagonal(field, true)) {
       valid = true;
     }
@@ -128,7 +129,7 @@ export class TableComponent implements OnInit {
       valid = true;
     }
     if (valid) {
-      this.fields[field.point.x][field.point.y].player = this.currentPlayer;
+      this.markBetweenFields(field, fields);
       this.currentPlayer = this.nextPlayer;
       this.checkValues();
       if (this.isEnd()) {
@@ -143,8 +144,8 @@ export class TableComponent implements OnInit {
       [Player.White]: 0,
     };
 
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
+    for (let i = 0; i < HEIGHT; i++) {
+      for (let j = 0; j < WIDTH; j++) {
         if (!this.fields[i][j].isPlayerEmpty()) {
           scores[this.fields[i][j].player]++;
         }
@@ -156,173 +157,61 @@ export class TableComponent implements OnInit {
     });
   }
 
-  checkRow(field: Field, character: boolean) {
-    let validLeft;
-    let stop = true;
-    let ys = [];
-    if (field.point.y > 1) {
-      validLeft = true;
-      for (let j = field.point.y - 1; j >= 0 && validLeft && stop; j--) {
-        if (character) {
-          console.log('Left', this.fields[field.point.x][j]);
-        }
-        switch (this.fields[field.point.x][j].player) {
-          case null:
-            validLeft = false;
-            break;
-          case this.currentPlayer:
-            if (ys.length > 0) {
-              if (character) {
-                /* for (let k = 0; k < ys.length; k++) {
-                  this.Fields[Field.x][ys[k]].owner = this.currentUser;
-                } */
-                ys.forEach((k) => {
-                  this.fields[field.point.x][k].player = this.currentPlayer;
-                });
-              }
-              stop = false;
-            } else {
-              validLeft = false;
-            }
-            break;
-          default:
-            if (j === 0) {
-              validLeft = false;
-            } else {
-              ys.push(j);
-            }
-            break;
-        }
+  getValidRowFieldPairs(field: Field): Field[] {
+    let left: Field | undefined = undefined;
+
+    for (let j = field.point.y - 1; j >= 0; j--) {
+      const f = this.fields[field.point.x][j];
+      if (f.isPlayer(this.currentPlayer)) {
+        left = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
     }
-    let validRight;
-    ys = [];
-    stop = true;
-    if (field.point.y < 6) {
-      validRight = true;
-      for (let j = field.point.y + 1; j <= 7 && validRight && stop; j++) {
-        if (character) {
-          console.log('Right', this.fields[field.point.x][j]);
-        }
-        switch (this.fields[field.point.x][j].player) {
-          case null:
-            validRight = false;
-            break;
-          case this.currentPlayer:
-            if (ys.length > 0) {
-              if (character) {
-                for (let k = 0; k < ys.length; k++) {
-                  this.fields[field.point.x][ys[k]].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validRight = false;
-            }
-            break;
-          default:
-            if (j === 7) {
-              validRight = false;
-            } else {
-              ys.push(j);
-            }
-            break;
-        }
+
+    let right: Field | undefined = undefined;
+
+    for (let j = field.point.y + 1; j < WIDTH; j++) {
+      const f = this.fields[field.point.x][j];
+      if (f.isPlayer(this.currentPlayer)) {
+        right = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
     }
-    if (character) {
-      console.log('ValidLeft', validLeft);
-      console.log('ValidRight', validRight);
-    }
-    if (validLeft === true || validRight === true) {
-      return true;
-    }
-    return false;
+
+    return [left, right].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
   }
 
-  checkCol(field: Field, character: boolean) {
-    let validTop;
-    let stop = true;
-    let xs = [];
-    if (field.point.x > 1) {
-      validTop = true;
-      for (let i = field.point.x - 1; i >= 0 && validTop && stop; i--) {
-        if (character) {
-          console.log('Top', this.fields[i][field.point.y]);
-        }
-        switch (this.fields[i][field.point.y].player) {
-          case null:
-            validTop = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0) {
-              if (character) {
-                console.log('Rajz');
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][field.point.y].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validTop = false;
-            }
-            break;
-          default:
-            if (i === 0) {
-              validTop = false;
-            } else {
-              xs.push(i);
-            }
-            break;
-        }
-      }
-    }
-    let validBottom;
-    xs = [];
-    stop = true;
-    if (field.point.x < 6) {
-      validBottom = true;
-      for (let i = field.point.x + 1; i <= 7 && validBottom && stop; i++) {
-        if (character) {
-          console.log('Bottom', this.fields[i][field.point.y]);
-        }
-        switch (this.fields[i][field.point.y].player) {
-          case null:
-            validBottom = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0) {
-              if (character) {
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][field.point.y].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validBottom = false;
-            }
-            break;
-          default:
-            if (i === 7) {
-              validBottom = false;
-            } else {
-              xs.push(i);
-            }
-            break;
-        }
-      }
-    }
-    if (character) {
-      console.log('validBottom', validBottom);
-      console.log('validTop', validTop);
-    }
-    if (validBottom === true || validTop === true) {
-      return true;
-    }
-    return false;
-  }
+  getValidColFieldPairs(field: Field): Field[] {
+    let top: Field | undefined = undefined;
 
-  // A végén ne álljanak be az eredeti érékek a többi check miatt
+    for (let i = field.point.x - 1; i >= 0; i--) {
+      const f = this.fields[i][field.point.y];
+      if (f.isPlayer(this.currentPlayer)) {
+        top = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
+      }
+    }
+
+    let bottom: Field | undefined = undefined;
+
+    for (let i = field.point.x + 1; i < HEIGHT; i++) {
+      const f = this.fields[i][field.point.x];
+      if (f.isPlayer(this.currentPlayer)) {
+        bottom = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
+      }
+    }
+
+    return [top, bottom].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
+  }
 
   // tslint:disable-next-line: no-shadowed-variable
   checkMainDiagonal(field: Field, character: boolean): boolean {
@@ -538,6 +427,26 @@ export class TableComponent implements OnInit {
   private mapFields<T>(lambda: (field: Field) => T): T[][] {
     return this.fields.map((row) => {
       return row.map((field) => lambda(field));
+    });
+  }
+
+  private relativeDistance(fieldA: Field, fieldB: Field): number {
+    return Math.max(Math.abs(fieldA.point.x - fieldB.point.x), Math.abs(fieldA.point.y - fieldB.point.y));
+  }
+
+  private markBetweenFields(field: Field, others: Field[]) {
+    others.forEach((other) => {
+      if (field.point.x === other.point.x) {
+        for (let j = Math.min(field.point.y, other.point.y); j <= Math.max(field.point.y, other.point.y); j++) {
+          this.fields[field.point.x][j].player = this.currentPlayer;
+        }
+      }
+
+      if (field.point.y === other.point.y) {
+        for (let i = Math.min(field.point.x, other.point.x); i <= Math.max(field.point.x, other.point.x); i++) {
+          this.fields[i][field.point.y].player = this.currentPlayer;
+        }
+      }
     });
   }
 }
