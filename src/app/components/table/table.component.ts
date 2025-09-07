@@ -38,11 +38,43 @@ export class TableComponent implements OnInit {
     return this.players[(this.currentPlayerIndex + 1) % this.players.length];
   }
 
-  restart() {
+  protected restart() {
     this.setToStart();
   }
 
-  setToStart() {
+  protected pass() {
+    if (this.gameState.isInProgress() && this.isEnd()) {
+      this.updateGameState();
+    } else {
+      this.setAlert('Nincs lehetőség a passzolásra');
+    }
+  }
+
+  protected clickField(field: Field) {
+    if (!this.gameState.isInProgress() || !field.isPlayerEmpty()) {
+      return;
+    }
+
+    let valid = false;
+
+    const rowFieldPairs = this.getValidRowFieldPairs(field);
+    const colFieldPairs = this.getValidColFieldPairs(field);
+    const mainDiagonalFieldPairs = this.getValidMainDiagonalFieldPairs(field);
+    const secondaryDiagonalFieldPairs = this.getValidSecondaryDiagonalFieldPairs(field);
+    console.log(rowFieldPairs, colFieldPairs, mainDiagonalFieldPairs, secondaryDiagonalFieldPairs);
+    const fields = [...rowFieldPairs, ...colFieldPairs, ...mainDiagonalFieldPairs, ...secondaryDiagonalFieldPairs];
+
+    if (fields.length > 0) {
+      this.markBetweenFields(field, fields);
+      this.currentPlayer = this.nextPlayer;
+      this.checkValues();
+      if (this.isEnd()) {
+        this.updateGameState();
+      }
+    }
+  }
+
+  private setToStart() {
     const fields: Field[][] = [];
     this.currentPlayer = Player.Black;
 
@@ -70,15 +102,7 @@ export class TableComponent implements OnInit {
     this.gameState.scores[Player.White] = 2;
   }
 
-  pass() {
-    if (this.gameState.isInProgress() && this.isEnd()) {
-      this.updateGameState();
-    } else {
-      this.setAlert('Nincs lehetőség a passzolásra');
-    }
-  }
-
-  isEnd(): boolean {
+  private isEnd(): boolean {
     // Any player has zero score (lost his/her tiles)
     if (Object.entries(this.gameState.scores).some(([_, value]) => value <= 0)) {
       return true;
@@ -101,44 +125,15 @@ export class TableComponent implements OnInit {
       return (
         this.getValidRowFieldPairs(field).length > 0 ||
         this.getValidColFieldPairs(field).length > 0 ||
-        this.checkMainDiagonal(field, false) ||
-        this.checkNotMainDiagonal(field, false)
+        this.getValidMainDiagonalFieldPairs(field).length > 0 ||
+        this.getValidSecondaryDiagonalFieldPairs(field).length > 0
       );
     })
       .map((row) => row.some((value) => value))
       .some((value) => value);
   }
 
-  clickField(field: Field) {
-    if (!this.gameState.isInProgress() || !field.isPlayerEmpty()) {
-      return;
-    }
-
-    let valid = false;
-
-    const rowFieldPairs = this.getValidRowFieldPairs(field);
-    const colFieldPairs = this.getValidColFieldPairs(field);
-    const fields = [...rowFieldPairs, ...colFieldPairs];
-
-    valid = fields.length > 0;
-
-    if (this.checkMainDiagonal(field, true)) {
-      valid = true;
-    }
-    if (this.checkNotMainDiagonal(field, true)) {
-      valid = true;
-    }
-    if (valid) {
-      this.markBetweenFields(field, fields);
-      this.currentPlayer = this.nextPlayer;
-      this.checkValues();
-      if (this.isEnd()) {
-        this.updateGameState();
-      }
-    }
-  }
-
-  checkValues(): void {
+  private checkValues(): void {
     let scores: Record<Player, number> = {
       [Player.Black]: 0,
       [Player.White]: 0,
@@ -157,7 +152,7 @@ export class TableComponent implements OnInit {
     });
   }
 
-  getValidRowFieldPairs(field: Field): Field[] {
+  private getValidRowFieldPairs(field: Field): Field[] {
     let left: Field | undefined = undefined;
 
     for (let j = field.point.y - 1; j >= 0; j--) {
@@ -185,7 +180,7 @@ export class TableComponent implements OnInit {
     return [left, right].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
   }
 
-  getValidColFieldPairs(field: Field): Field[] {
+  private getValidColFieldPairs(field: Field): Field[] {
     let top: Field | undefined = undefined;
 
     for (let i = field.point.x - 1; i >= 0; i--) {
@@ -201,7 +196,7 @@ export class TableComponent implements OnInit {
     let bottom: Field | undefined = undefined;
 
     for (let i = field.point.x + 1; i < HEIGHT; i++) {
-      const f = this.fields[i][field.point.x];
+      const f = this.fields[i][field.point.y];
       if (f.isPlayer(this.currentPlayer)) {
         bottom = f;
         break;
@@ -213,187 +208,84 @@ export class TableComponent implements OnInit {
     return [top, bottom].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
   }
 
-  // tslint:disable-next-line: no-shadowed-variable
-  checkMainDiagonal(field: Field, character: boolean): boolean {
-    let validRigthBottom;
-    let stop = true;
-    let x = field.point.x - 1;
-    let y = field.point.y - 1;
-    let xs = [];
-    let ys = [];
-    if (field.point.x > 1 && field.point.y > 1) {
-      validRigthBottom = true;
-      while (x !== -1 && y !== -1 && stop && validRigthBottom) {
-        if (character) {
-          console.log('RightBottom', this.fields[x][y]);
-        }
-        switch (this.fields[x][y].player) {
-          case null:
-            validRigthBottom = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0 && ys.length > 0) {
-              if (character) {
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validRigthBottom = false;
-            }
-            break;
-          default:
-            if (x === 0 || y === 0) {
-              validRigthBottom = false;
-            } else {
-              xs.push(x);
-              ys.push(y);
-            }
-            break;
-        }
-        x--;
-        y--;
+  private getValidMainDiagonalFieldPairs(field: Field): Field[] {
+    let topLeft: Field | undefined = undefined;
+    let i = field.point.x - 1;
+    let j = field.point.y - 1;
+
+    while (i >= 0 && j >= 0) {
+      const f = this.fields[i][j];
+
+      if (f.isPlayer(this.currentPlayer)) {
+        topLeft = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
+
+      i--;
+      j--;
     }
-    let validLeftTop;
-    stop = true;
-    x = field.point.x + 1;
-    y = field.point.y + 1;
-    xs = [];
-    ys = [];
-    if (field.point.x < 6 && field.point.y < 6) {
-      validLeftTop = true;
-      while (x !== 8 && y !== 8 && stop && validLeftTop) {
-        if (character) {
-          console.log('LeftTop', this.fields[x][y]);
-        }
-        switch (this.fields[x][y].player) {
-          case null:
-            validLeftTop = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0 && ys.length > 0) {
-              if (character) {
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validLeftTop = false;
-            }
-            break;
-          default:
-            if (x === 7 || y === 7) {
-              validLeftTop = false;
-            } else {
-              xs.push(x);
-              ys.push(y);
-            }
-            break;
-        }
-        x++;
-        y++;
+
+    let bottomRight: Field | undefined = undefined;
+    i = field.point.x + 1;
+    j = field.point.y + 1;
+
+    while (i < HEIGHT && j < WIDTH) {
+      const f = this.fields[i][j];
+
+      if (f.isPlayer(this.currentPlayer)) {
+        bottomRight = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
+
+      i++;
+      j++;
     }
-    if (character) {
-      console.log('validRightBottom', validRigthBottom);
-      console.log('validLeftTop', validLeftTop);
-    }
-    if (validRigthBottom === true || validLeftTop === true) {
-      return true;
-    }
-    return false;
+
+    return [topLeft, bottomRight].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
   }
 
-  checkNotMainDiagonal(field: Field, character: boolean): boolean {
-    let validLeftBottom;
-    let stop = true;
-    let x = field.point.x + 1;
-    let y = field.point.y - 1;
-    let xs = [];
-    let ys = [];
-    if (field.point.x < 6 && field.point.y > 1) {
-      validLeftBottom = true;
-      while (x !== 8 && y !== -1 && stop && validLeftBottom) {
-        if (character) {
-          console.log('LeftBottom', this.fields[x][y]);
-        }
-        switch (this.fields[x][y].player) {
-          case null:
-            validLeftBottom = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0 && ys.length > 0) {
-              if (character) {
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validLeftBottom = false;
-            }
-            break;
-          default:
-            if (x === 7 || y === 0) {
-              validLeftBottom = false;
-            } else {
-              xs.push(x);
-              ys.push(y);
-            }
-            break;
-        }
-        x++;
-        y--;
+  private getValidSecondaryDiagonalFieldPairs(field: Field): Field[] {
+    let topRight: Field | undefined = undefined;
+    let i = field.point.x - 1;
+    let j = field.point.y + 1;
+
+    while (i >= 0 && j < WIDTH) {
+      const f = this.fields[i][j];
+
+      if (f.isPlayer(this.currentPlayer)) {
+        topRight = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
+
+      i--;
+      j++;
     }
-    let validRightTop;
-    stop = true;
-    x = field.point.x - 1;
-    y = field.point.y + 1;
-    xs = [];
-    ys = [];
-    if (field.point.x > 1 && field.point.y < 6) {
-      validRightTop = true;
-      while (x !== 8 && y !== 8 && stop && validRightTop) {
-        if (character) {
-          console.log('RightTop', this.fields[x][y]);
-        }
-        switch (this.fields[x][y].player) {
-          case null:
-            validRightTop = false;
-            break;
-          case this.currentPlayer:
-            if (xs.length > 0 && ys.length > 0) {
-              if (character) {
-                for (let k = 0; k < xs.length; k++) {
-                  this.fields[xs[k]][ys[k]].player = this.currentPlayer;
-                }
-              }
-              stop = false;
-            } else {
-              validRightTop = false;
-            }
-            break;
-          default:
-            if (x === 0 || y === 7) {
-              validRightTop = false;
-            } else {
-              xs.push(x);
-              ys.push(y);
-            }
-            break;
-        }
-        x--;
-        y++;
+
+    let bottomLeft: Field | undefined = undefined;
+    i = field.point.x + 1;
+    j = field.point.y - 1;
+
+    while (i < HEIGHT && j >= 0) {
+      const f = this.fields[i][j];
+
+      if (f.isPlayer(this.currentPlayer)) {
+        bottomLeft = f;
+        break;
+      } else if (f.isPlayerEmpty()) {
+        break;
       }
+
+      i++;
+      j--;
     }
-    if (validRightTop === true || validLeftBottom === true) {
-      return true;
-    }
-    return false;
+
+    return [topRight, bottomLeft].filter((f) => f !== undefined).filter((f) => this.relativeDistance(field, f) > 1);
   }
 
   private updateGameState(): void {
@@ -445,6 +337,30 @@ export class TableComponent implements OnInit {
       if (field.point.y === other.point.y) {
         for (let i = Math.min(field.point.x, other.point.x); i <= Math.max(field.point.x, other.point.x); i++) {
           this.fields[i][field.point.y].player = this.currentPlayer;
+        }
+      }
+
+      if (field.point.x - other.point.x === field.point.y - other.point.y) {
+        let i = Math.min(field.point.x, other.point.x);
+        let j = Math.min(field.point.y, other.point.y);
+
+        while (i <= Math.max(field.point.x, other.point.x) && j <= Math.max(field.point.y, other.point.y)) {
+          this.fields[i][j].player = this.currentPlayer;
+
+          i++;
+          j++;
+        }
+      }
+
+      if (Math.abs(field.point.x - other.point.x) === Math.abs(field.point.y - other.point.y)) {
+        let i = Math.min(field.point.x, other.point.x);
+        let j = Math.max(field.point.y, other.point.y);
+
+        while (i <= Math.max(field.point.x, other.point.x) && j >= Math.min(field.point.y, other.point.y)) {
+          this.fields[i][j].player = this.currentPlayer;
+
+          i++;
+          j--;
         }
       }
     });
