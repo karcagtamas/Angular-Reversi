@@ -1,14 +1,23 @@
-<div class="m-4" class="text-center">
+<div id="scores">
+  <div class="inner">
+    <h3 class="title">Scores</h3>
+
+    @for(player of players; track player) {
+    <div>{{ playerMeta[player].name }}: {{ gameState.scores[player] }}</div>
+    }
+  </div>
+</div>
+<div id="board">
   <h1>Reversi</h1>
   <h2>Következő játékos: {{ playerMeta[currentPlayer].name }} | Pontok: {{ gameState.scores[currentPlayer] }}</h2>
 
-  @switch (gameState.progress) { @case ('draw') { Döntetlen! } @case ('progressing') { Progressing! } @default {
+  @switch (gameState.progress) { @case ('draw') { Döntetlen! } @case ('progressing') { } @default {
   <h3>Győztes: {{ playerMeta[gameState.progress].name }} | Pontok: {{ gameState.scores[gameState.progress] }}</h3>
   } } @if (alert) {
   <div class="alert alert-danger"><strong>HIBA!</strong> {{ alert }}</div>
   }
-  <button class="btn btn-primary" (click)="pass()">PASSZ</button>
-  <button class="btn btn-primary" (click)="restart()">RESTART</button>
+  <button type="button" class="btn btn-warning" (click)="pass()">PASSZ</button>
+  <button type="button" class="btn btn-primary" (click)="restart()">RESTART</button>
   <div id="field">
     @for (item of fields; track item) {
     <div class="row">
@@ -16,6 +25,15 @@
       <app-field [field]="i" (clickFieldEvent)="clickField($event)" />
       }
     </div>
+    }
+  </div>
+</div>
+<div id="steps">
+  <div class="inner">
+    <h3 class="title">Steps</h3>
+
+    @for (step of gameState.steps; track step.order) {
+    <div>{{ playerMeta[step.player].name }} selected {{ step.cell.x }}-{{ step.cell.y }}</div>
     }
   </div>
 </div>

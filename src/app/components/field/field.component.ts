@@ -4,7 +4,7 @@ import { Component, input, output } from '@angular/core';
 @Component({
   selector: 'app-field',
   templateUrl: './field.component.html',
-  styleUrls: ['./field.component.css'],
+  styleUrls: ['./field.component.scss'],
 })
 export class FieldComponent {
   readonly field = input<Field>(null);

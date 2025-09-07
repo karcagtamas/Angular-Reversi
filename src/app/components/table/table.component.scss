@@ -1,0 +1,54 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+#board {
+  flex: 1;
+  text-align: center;
+
+  #field {
+    width: 800px;
+    margin: auto;
+  }
+
+  .row {
+    margin: auto;
+  }
+
+  button {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 1rem;
+  }
+}
+
+@mixin box() {
+  display: flex;
+  flex-direction: column;
+  padding: 10rem 1rem;
+  height: 100%;
+
+  .inner {
+    border: 2px solid black;
+    border-radius: 4px;
+    width: 300px;
+    flex: 1;
+    padding: 1rem;
+
+    .title {
+      text-align: center;
+    }
+  }
+}
+
+#scores {
+  @include box();
+}
+
+#steps {
+  @include box();
+}

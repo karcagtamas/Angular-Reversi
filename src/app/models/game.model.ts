@@ -12,9 +12,16 @@ export const PlayerMeta: Record<Player, { name: string }> = {
   },
 };
 
+export type Step = {
+  order: number;
+  player: Player;
+  cell: { x: number; y: number };
+};
+
 export class GameState {
   progress: 'progressing' | 'draw' | Player;
   scores: Record<Player, number>;
+  steps: Step[];
 
   constructor() {
     this.progress = 'progressing';

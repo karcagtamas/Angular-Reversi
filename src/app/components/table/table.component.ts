@@ -3,20 +3,20 @@ import { Field, Point } from 'src/app/models/field.model';
 import { FieldComponent } from '../field/field.component';
 import { GameState, Player, PlayerMeta } from 'src/app/models/game.model';
 
-const HEIGHT = 8;
-const WIDTH = 8;
-
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.css'],
+  styleUrls: ['./table.component.scss'],
   imports: [FieldComponent],
 })
 export class TableComponent implements OnInit {
   fields: Field[][] = [];
   alert: string = null;
 
-  private readonly players = [Player.Black, Player.White];
+  protected readonly HEIGHT = 8;
+  protected readonly WIDTH = 8;
+
+  protected readonly players = [Player.Black, Player.White];
   protected currentPlayerIndex = 0;
   protected readonly playerMeta = PlayerMeta;
 
@@ -55,8 +55,6 @@ export class TableComponent implements OnInit {
       return;
     }
 
-    let valid = false;
-
     const rowFieldPairs = this.getValidRowFieldPairs(field);
     const colFieldPairs = this.getValidColFieldPairs(field);
     const mainDiagonalFieldPairs = this.getValidMainDiagonalFieldPairs(field);
@@ -68,6 +66,16 @@ export class TableComponent implements OnInit {
       this.markBetweenFields(field, fields);
       this.currentPlayer = this.nextPlayer;
       this.checkValues();
+
+      this.gameState.steps = [
+        ...this.gameState.steps,
+        {
+          order: this.gameState.steps.length,
+          player: this.currentPlayer,
+          cell: field.point,
+        },
+      ];
+
       if (this.isEnd()) {
         this.updateGameState();
       }
@@ -79,9 +87,9 @@ export class TableComponent implements OnInit {
     this.currentPlayer = Player.Black;
 
     // Generate fields
-    for (let i = 0; i < HEIGHT; i++) {
+    for (let i = 0; i < this.HEIGHT; i++) {
       const row: Field[] = [];
-      for (let j = 0; j < WIDTH; j++) {
+      for (let j = 0; j < this.WIDTH; j++) {
         row.push(new Field({ x: i, y: j }));
       }
       fields.push(row);
@@ -90,16 +98,17 @@ export class TableComponent implements OnInit {
     // Inital fields
     //assert(HEIGHT === WIDTH);
     //assert(HEIGHT % 2 === 0);
-    fields[HEIGHT / 2 - 1][WIDTH / 2 - 1].player = Player.Black;
-    fields[HEIGHT / 2 - 1][WIDTH / 2].player = Player.White;
-    fields[HEIGHT / 2][WIDTH / 2 - 1].player = Player.White;
-    fields[HEIGHT / 2][WIDTH / 2].player = Player.Black;
+    fields[this.HEIGHT / 2 - 1][this.WIDTH / 2 - 1].player = Player.Black;
+    fields[this.HEIGHT / 2 - 1][this.WIDTH / 2].player = Player.White;
+    fields[this.HEIGHT / 2][this.WIDTH / 2 - 1].player = Player.White;
+    fields[this.HEIGHT / 2][this.WIDTH / 2].player = Player.Black;
 
     this.fields = fields;
 
     // Initial scores
     this.gameState.scores[Player.Black] = 2;
     this.gameState.scores[Player.White] = 2;
+    this.gameState.steps = [];
   }
 
   private isEnd(): boolean {
@@ -113,7 +122,7 @@ export class TableComponent implements OnInit {
       .reduce((a, b) => a + b);
 
     // All tile has been filled
-    if (total === HEIGHT * WIDTH) {
+    if (total === this.HEIGHT * this.WIDTH) {
       return true;
     }
 
@@ -139,8 +148,8 @@ export class TableComponent implements OnInit {
       [Player.White]: 0,
     };
 
-    for (let i = 0; i < HEIGHT; i++) {
-      for (let j = 0; j < WIDTH; j++) {
+    for (let i = 0; i < this.HEIGHT; i++) {
+      for (let j = 0; j < this.WIDTH; j++) {
         if (!this.fields[i][j].isPlayerEmpty()) {
           scores[this.fields[i][j].player]++;
         }
@@ -167,7 +176,7 @@ export class TableComponent implements OnInit {
 
     let right: Field | undefined = undefined;
 
-    for (let j = field.point.y + 1; j < WIDTH; j++) {
+    for (let j = field.point.y + 1; j < this.WIDTH; j++) {
       const f = this.fields[field.point.x][j];
       if (f.isPlayer(this.currentPlayer)) {
         right = f;
@@ -195,7 +204,7 @@ export class TableComponent implements OnInit {
 
     let bottom: Field | undefined = undefined;
 
-    for (let i = field.point.x + 1; i < HEIGHT; i++) {
+    for (let i = field.point.x + 1; i < this.HEIGHT; i++) {
       const f = this.fields[i][field.point.y];
       if (f.isPlayer(this.currentPlayer)) {
         bottom = f;
@@ -231,7 +240,7 @@ export class TableComponent implements OnInit {
     i = field.point.x + 1;
     j = field.point.y + 1;
 
-    while (i < HEIGHT && j < WIDTH) {
+    while (i < this.HEIGHT && j < this.WIDTH) {
       const f = this.fields[i][j];
 
       if (f.isPlayer(this.currentPlayer)) {
@@ -253,7 +262,7 @@ export class TableComponent implements OnInit {
     let i = field.point.x - 1;
     let j = field.point.y + 1;
 
-    while (i >= 0 && j < WIDTH) {
+    while (i >= 0 && j < this.WIDTH) {
       const f = this.fields[i][j];
 
       if (f.isPlayer(this.currentPlayer)) {
@@ -271,7 +280,7 @@ export class TableComponent implements OnInit {
     i = field.point.x + 1;
     j = field.point.y - 1;
 
-    while (i < HEIGHT && j >= 0) {
+    while (i < this.HEIGHT && j >= 0) {
       const f = this.fields[i][j];
 
       if (f.isPlayer(this.currentPlayer)) {
